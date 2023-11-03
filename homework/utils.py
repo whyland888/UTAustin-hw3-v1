@@ -3,6 +3,7 @@ from PIL import Image
 from torch.utils.data import Dataset, DataLoader
 import os
 import pandas as pd
+import numpy as np
 from torchvision import transforms
 from torchvision.transforms import functional as F
 
@@ -77,13 +78,18 @@ class SuperTuxDataset(Dataset):
 
 
 class DenseSuperTuxDataset(Dataset):
-    def __init__(self, dataset_path, transform=ToTensor()):
+    def __init__(self, dataset_path, transform=Transform()):
         from glob import glob
         from os import path
         self.files = []
         for im_f in glob(path.join(dataset_path, '*_im.jpg')):
             self.files.append(im_f.replace('_im.jpg', ''))
-        self.transform = transform
+
+        if 'train' in dataset_path:
+            self.transform = Transform()
+        else:
+            self.transform = ToTensor()
+        self.to_tensor = ToTensor()
 
     def __len__(self):
         return len(self.files)
@@ -92,8 +98,12 @@ class DenseSuperTuxDataset(Dataset):
         b = self.files[idx]
         im = Image.open(b + '_im.jpg')
         lbl = Image.open(b + '_seg.png')
-        if self.transform is not None:
-            im, lbl = self.transform(im, lbl)
+        shape = np.shape(np.array(lbl))
+        lbl = np.array(lbl).flatten()
+        lbl = [int(x) for x in lbl]
+        lbl = np.reshape(lbl, shape)
+        lbl = self.to_tensor(lbl)
+        im = self.transform(im)
         return im, lbl
 
 
