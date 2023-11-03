@@ -1,4 +1,5 @@
 import torch
+import numpy as np
 import torch.nn.functional as F
 
 
@@ -70,6 +71,7 @@ class FCN(torch.nn.Module):
         super().__init__()
 
         # Contracting path (Encoder)
+        self.down0 = Block(n_input_channels, 5, stride=1)  # for identity
         self.down1 = Block(n_input_channels, layers[0], stride=1)
         self.down2 = Block(layers[0], layers[1], stride=1)
         self.down3 = Block(layers[1], layers[2], stride=1)
@@ -81,6 +83,8 @@ class FCN(torch.nn.Module):
                                      padding=1)
         self.up2 = TBlock(layers[1], layers[0])
         self.conv2 = torch.nn.Conv2d(in_channels=layers[1], out_channels=layers[0], kernel_size=3, stride=1,
+                                     padding=1)
+        self.conv3 = torch.nn.Conv2d(in_channels=10, out_channels=5, kernel_size=3, stride=1,
                                      padding=1)
         self.up3 = TBlock(layers[0], n_classes)
 
@@ -97,6 +101,11 @@ class FCN(torch.nn.Module):
             d2 = self.down4(d1)
 
             return d2
+
+        # Identity
+        identity = x
+        identity = self.down0(identity)
+        # print(np.shape(identity))
 
         # Encoder (downsampling)
         d1 = self.down1(x)
@@ -117,9 +126,14 @@ class FCN(torch.nn.Module):
         s2 = torch.cat([e2, d2], dim=1)  # skip connection
         c2 = self.conv2(s2)
 
+        # Add identity connection
         e3 = self.up3(c2)
+        # print(np.shape(e3))
+        s3 = torch.cat([e3, identity], dim=1)  # identity connection
+        # print(np.shape(s3))
+        c3 = self.conv3(s3)
 
-        return e3
+        return c3
 
 
 model_factory = {
