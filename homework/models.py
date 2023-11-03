@@ -2,24 +2,67 @@ import torch
 import torch.nn.functional as F
 
 
-class CNNClassifier(torch.nn.Module):
-    def __init__(self):
+class Block(torch.nn.Module):
+    def __init__(self, n_input, n_output, stride):
         super().__init__()
-        """
-        Your code here
-        Hint: Base this on yours or HW2 master solution if you'd like.
-        Hint: Overall model can be similar to HW2, but you likely need some architecture changes (e.g. ResNets)
-        """
-        raise NotImplementedError('CNNClassifier.__init__')
+        self.net = torch.nn.Sequential(
+            torch.nn.Conv2d(n_input, n_output, kernel_size=3, padding=1, stride=stride),
+            torch.nn.BatchNorm2d(n_output),
+            torch.nn.ReLU(),
+            torch.nn.Conv2d(n_output, n_output, kernel_size=3, padding=1, stride=stride),
+            torch.nn.BatchNorm2d(n_output),
+            torch.nn.ReLU()
+        )
 
     def forward(self, x):
-        """
-        Your code here
-        @x: torch.Tensor((B,3,64,64))
-        @return: torch.Tensor((B,6))
-        Hint: Apply input normalization inside the network, to make sure it is applied in the grader
-        """
-        raise NotImplementedError('CNNClassifier.forward')
+        return self.net(x)
+
+
+class TBlock(torch.nn.Module):
+    def __init__(self, n_input, n_output):
+        super().__init__()
+
+        self.net = torch.nn.Sequential(
+            torch.nn.ConvTranspose2d(n_input, n_output, kernel_size=2, stride=2),
+            torch.nn.Conv2d(n_output, n_output, kernel_size=3, padding=1),
+            torch.nn.BatchNorm2d(n_output),
+            torch.nn.ReLU())
+
+    def forward(self, x):
+        return self.net(x)
+
+
+class CNNClassifier(torch.nn.Module):
+    def __init__(self, layers=[32,64,128], n_input_channels=3, n_classes=6):
+        super().__init__()
+
+        # First layers
+        L = [torch.nn.Conv2d(n_input_channels, 32, kernel_size=7, padding=3, stride=2),
+             torch.nn.BatchNorm2d(32),
+             torch.nn.ReLU(),
+             torch.nn.MaxPool2d(kernel_size=3, stride=2, padding=1)]
+
+        # Add Layers
+        c = 32
+        for l in layers:
+            L.append(Block(c, l, stride=2))
+            c = l
+
+        # Put layers together
+        self.network = torch.nn.Sequential(*L)
+
+        # Append linear layer to the end
+        self.classifier = torch.nn.Linear(layers[-1], n_classes)
+
+    def forward(self, x):
+
+        # Compute feature maps
+        x = self.network(x)
+
+        # Global average pooling (reduces height and width to a single number while retaining channels)
+        x = x.mean(dim=[2, 3])
+
+        return self.classifier(x)
 
 
 class FCN(torch.nn.Module):

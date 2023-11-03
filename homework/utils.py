@@ -1,6 +1,8 @@
 import torch
 from PIL import Image
 from torch.utils.data import Dataset, DataLoader
+import os
+import pandas as pd
 from torchvision import transforms
 from torchvision.transforms import functional as F
 
@@ -12,30 +14,67 @@ DENSE_LABEL_NAMES = ['background', 'kart', 'track', 'bomb/projectile', 'pickup/n
 DENSE_CLASS_DISTRIBUTION = [0.52683655, 0.02929112, 0.4352989, 0.0044619, 0.00411153]
 
 
+class Transform:
+    def __call__(self, image):
+
+        # Horizontal flipping
+        h_flip = transforms.RandomHorizontalFlip(0.5)
+
+        # Brightness
+        brightness = transforms.ColorJitter(brightness=.5)
+
+        # Contrast
+        contrast = transforms.ColorJitter(contrast=.1)
+
+        # Saturation
+        saturation = transforms.ColorJitter(saturation=.1)
+
+        # Hue
+        hue = transforms.ColorJitter(hue=.1)
+
+        # Tensor
+        to_tensor = transforms.ToTensor()
+
+        transformations = [h_flip, brightness, contrast, saturation, hue, to_tensor]
+        transform = transforms.Compose(transformations)
+        return transform(image)
+
+
+class ToTensor:
+    def __call__(self, image):
+        transform = transforms.Compose([transforms.ToTensor()])
+        return transform(image)
+
+
 class SuperTuxDataset(Dataset):
-    def __init__(self, dataset_path):
-        """
-        Your code here
-        Hint: Use your solution (or the master solution) to HW1 / HW2
-        Hint: If you're loading (and storing) PIL images here, make sure to call image.load(),
-              to avoid an OS error for too many open files.
-        Hint: Do not store torch.Tensor's as data here, but use PIL images, torchvision.transforms expects PIL images
-              for most transformations.
-        """
-        raise NotImplementedError('SuperTuxDataset.__init__')
+    def __init__(self, dataset_path, **kwargs):
+        self.path = dataset_path
+        if 'train' in dataset_path:
+            self.transform = Transform()
+        else:
+            self.transform = ToTensor()
+
+        # Images
+        image_files = pd.read_csv(os.path.join(dataset_path, 'labels.csv'))['file'].tolist()
+        self.image_paths = [os.path.join(dataset_path, x) for x in image_files]
+
+        # Labels
+        self.str_labels = pd.read_csv(os.path.join(dataset_path, 'labels.csv'))['label'].tolist()
+        label_dict = {"background": 0, "kart": 1, "pickup": 2, "nitro": 3, "bomb": 4, "projectile": 5}
+        self.int_labels = [label_dict[x] for x in self.str_labels]
 
     def __len__(self):
-        """
-        Your code here
-        """
-        raise NotImplementedError('SuperTuxDataset.__len__')
+        return len(self.int_labels)
 
     def __getitem__(self, idx):
-        """
-        Your code here
-        """
-        raise NotImplementedError('SuperTuxDataset.__getitem__')
-        return img, label
+        label = self.int_labels[idx]
+
+        # Convert filepath to tensor
+        image_path = self.image_paths[idx]
+        image = Image.open(image_path).convert("RGB")
+        image = self.transform(image)
+
+        return image, label
 
 
 class DenseSuperTuxDataset(Dataset):
