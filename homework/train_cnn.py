@@ -1,5 +1,5 @@
-from .models import CNNClassifier, save_model
-from .utils import ConfusionMatrix, load_data, LABEL_NAMES
+from models import CNNClassifier, save_model
+from utils import load_data
 import torch
 import torchvision
 import torch.utils.tensorboard as tb
@@ -28,7 +28,7 @@ def train(args):
 
     model = CNNClassifier().to(device)
     criterion = torch.nn.CrossEntropyLoss()
-    optimizer = optim.SGD(model.parameters(), lr=learning_rate)
+    optimizer = optim.AdamW(model.parameters(), lr=learning_rate)
 
     # Training Loop
     global_steps = 0

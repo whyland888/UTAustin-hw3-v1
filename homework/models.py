@@ -66,29 +66,60 @@ class CNNClassifier(torch.nn.Module):
 
 
 class FCN(torch.nn.Module):
-    def __init__(self):
+    def __init__(self, layers=[32,64,128], n_input_channels=3, n_classes=5, normalize=False):
         super().__init__()
-        """
-        Your code here.
-        Hint: The FCN can be a bit smaller the the CNNClassifier since you need to run it at a higher resolution
-        Hint: Use up-convolutions
-        Hint: Use skip connections
-        Hint: Use residual connections
-        Hint: Always pad by kernel_size / 2, use an odd kernel_size
-        """
-        raise NotImplementedError('FCN.__init__')
+
+        # Contracting path (Encoder)
+        self.down1 = Block(n_input_channels, layers[0], stride=1)
+        self.down2 = Block(layers[0], layers[1], stride=1)
+        self.down3 = Block(layers[1], layers[2], stride=1)
+        self.down4 = Block(layers[0], 5, stride=1)  # for use with small images
+
+        # Expansive path (Decoder)
+        self.up1 = TBlock(layers[2], layers[1])
+        self.conv1 = torch.nn.Conv2d(in_channels=layers[2], out_channels=layers[1], kernel_size=3, stride=1,
+                                     padding=1)
+        self.up2 = TBlock(layers[1], layers[0])
+        self.conv2 = torch.nn.Conv2d(in_channels=layers[1], out_channels=layers[0], kernel_size=3, stride=1,
+                                     padding=1)
+        self.up3 = TBlock(layers[0], n_classes)
+
+        # Other layers
+        # self.dropout = torch.nn.Dropout(p=dropout_prob)
+        self.max_pool = torch.nn.MaxPool2d(2)
 
     def forward(self, x):
-        """
-        Your code here
-        @x: torch.Tensor((B,3,H,W))
-        @return: torch.Tensor((B,5,H,W))
-        Hint: Apply input normalization inside the network, to make sure it is applied in the grader
-        Hint: Input and output resolutions need to match, use output_padding in up-convolutions, crop the output
-              if required (use z = z[:, :, :H, :W], where H and W are the height and width of a corresponding strided
-              convolution
-        """
-        raise NotImplementedError('FCN.forward')
+
+        # For small images
+        if x.size()[-1] <= 16 or x.size()[-2] <= 16:
+            # Downsample and upsample once
+            d1 = self.down1(x)
+            d2 = self.down4(d1)
+
+            return d2
+
+        # Encoder (downsampling)
+        d1 = self.down1(x)
+        d2 = self.max_pool(d1)
+
+        d3 = self.down2(d2)
+        d4 = self.max_pool(d3)
+
+        d5 = self.down3(d4)
+        d6 = self.max_pool(d5)
+
+        # Decoder (upsampling)
+        e1 = self.up1(d6)
+        s1 = torch.cat([e1, d4], dim=1)  # skip connection
+        c1 = self.conv1(s1)
+
+        e2 = self.up2(c1)
+        s2 = torch.cat([e2, d2], dim=1)  # skip connection
+        c2 = self.conv2(s2)
+
+        e3 = self.up3(c2)
+
+        return e3
 
 
 model_factory = {

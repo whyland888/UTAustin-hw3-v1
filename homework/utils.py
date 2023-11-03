@@ -6,7 +6,6 @@ import pandas as pd
 from torchvision import transforms
 from torchvision.transforms import functional as F
 
-from . import dense_transforms
 
 LABEL_NAMES = ['background', 'kart', 'pickup', 'nitro', 'bomb', 'projectile']
 DENSE_LABEL_NAMES = ['background', 'kart', 'track', 'bomb/projectile', 'pickup/nitro']
@@ -18,10 +17,10 @@ class Transform:
     def __call__(self, image):
 
         # Horizontal flipping
-        h_flip = transforms.RandomHorizontalFlip(0.5)
+        h_flip = transforms.RandomHorizontalFlip(0.3)
 
         # Brightness
-        brightness = transforms.ColorJitter(brightness=.5)
+        brightness = transforms.ColorJitter(brightness=.3)
 
         # Contrast
         contrast = transforms.ColorJitter(contrast=.1)
@@ -78,7 +77,7 @@ class SuperTuxDataset(Dataset):
 
 
 class DenseSuperTuxDataset(Dataset):
-    def __init__(self, dataset_path, transform=dense_transforms.ToTensor()):
+    def __init__(self, dataset_path, transform=ToTensor()):
         from glob import glob
         from os import path
         self.files = []
