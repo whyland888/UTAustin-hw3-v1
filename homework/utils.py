@@ -18,10 +18,10 @@ class Transform:
     def __call__(self, image):
 
         # Horizontal flipping
-        h_flip = transforms.RandomHorizontalFlip(0.5)
+        h_flip = transforms.RandomHorizontalFlip(0.1)
 
         # Brightness
-        brightness = transforms.ColorJitter(brightness=.3)
+        brightness = transforms.ColorJitter(brightness=.1)
 
         # Contrast
         contrast = transforms.ColorJitter(contrast=.1)
