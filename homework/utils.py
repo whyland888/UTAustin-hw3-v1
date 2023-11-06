@@ -21,16 +21,16 @@ class Transform:
         h_flip = transforms.RandomHorizontalFlip(0.5)
 
         # Brightness
-        brightness = transforms.ColorJitter(brightness=.5)
+        brightness = transforms.ColorJitter(brightness=.4)
 
         # Contrast
-        contrast = transforms.ColorJitter(contrast=.5)
+        contrast = transforms.ColorJitter(contrast=.4)
 
         # Saturation
-        saturation = transforms.ColorJitter(saturation=.5)
+        saturation = transforms.ColorJitter(saturation=.4)
 
         # Hue
-        hue = transforms.ColorJitter(hue=.5)
+        hue = transforms.ColorJitter(hue=.4)
 
         # Tensor
         to_tensor = transforms.ToTensor()
