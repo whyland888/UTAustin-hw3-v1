@@ -32,10 +32,13 @@ class Transform:
         # Hue
         hue = transforms.ColorJitter(hue=.1)
 
+        # Center Crop
+        c_crop = transforms.CenterCrop((84, 63))
+
         # Tensor
         to_tensor = transforms.ToTensor()
 
-        transformations = [h_flip, brightness, contrast, saturation, hue, to_tensor]
+        transformations = [h_flip, brightness, contrast, saturation, hue, c_crop, to_tensor]
         transform = transforms.Compose(transformations)
         return transform(image)
 

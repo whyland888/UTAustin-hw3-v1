@@ -23,9 +23,11 @@ def train(args):
     # Data Loading
     ubuntu_train_path = r"/home/william/Desktop/UT_Austin_Computer_Vision/UTAustin-hw3-v1/dense_data/train"
     ubuntu_valid_path = r"/home/william/Desktop/UT_Austin_Computer_Vision/UTAustin-hw3-v1/dense_data/valid"
+    colab_train_path = r"/content/UTAustin_hw3/dense_data/train"
+    colab_valid_path = r"/content/UTAustin_hw3/dense_data/valid"
 
-    train_loader = load_dense_data(dataset_path=ubuntu_train_path)
-    valid_loader = load_dense_data(dataset_path=ubuntu_valid_path)
+    train_loader = load_dense_data(dataset_path=colab_train_path)
+    valid_loader = load_dense_data(dataset_path=colab_valid_path)
 
     # Model
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
