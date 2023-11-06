@@ -20,9 +20,6 @@ class Transform:
         # Horizontal flipping
         h_flip = transforms.RandomHorizontalFlip(0.5)
 
-        # Random crop
-        crop = transforms.RandomCrop(64)
-
         # Brightness
         brightness = transforms.ColorJitter(brightness=.3)
 
@@ -38,7 +35,7 @@ class Transform:
         # Tensor
         to_tensor = transforms.ToTensor()
 
-        transformations = [h_flip, crop, brightness, contrast, saturation, hue, to_tensor]
+        transformations = [h_flip, brightness, contrast, saturation, hue, to_tensor]
         transform = transforms.Compose(transformations)
         return transform(image)
 
