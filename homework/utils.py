@@ -18,24 +18,27 @@ class Transform:
     def __call__(self, image):
 
         # Horizontal flipping
-        h_flip = transforms.RandomHorizontalFlip(0.3)
+        h_flip = transforms.RandomHorizontalFlip(0.5)
+
+        # Random crop
+        crop = transforms.RandomCrop(64)
 
         # Brightness
         brightness = transforms.ColorJitter(brightness=.3)
 
         # Contrast
-        contrast = transforms.ColorJitter(contrast=.3)
+        contrast = transforms.ColorJitter(contrast=.1)
 
         # Saturation
-        saturation = transforms.ColorJitter(saturation=.3)
+        saturation = transforms.ColorJitter(saturation=.1)
 
         # Hue
-        hue = transforms.ColorJitter(hue=.3)
+        hue = transforms.ColorJitter(hue=.1)
 
         # Tensor
         to_tensor = transforms.ToTensor()
 
-        transformations = [h_flip, brightness, contrast, saturation, hue, to_tensor]
+        transformations = [h_flip, crop, brightness, contrast, saturation, hue, to_tensor]
         transform = transforms.Compose(transformations)
         return transform(image)
 
